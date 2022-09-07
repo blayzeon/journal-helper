@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Journal Gen</title>
+    <style>
+      #journal-entry {
+        padding: 1rem;
+        border: 1px solid black;
+        margin-bottom: 1rem;
+      }
+
+      h2,
+      h4 {
+        padding: 0;
+        margin: 0;
+      }
+
+      .pre {
+        white-space: pre !important;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="journal-entry">
+      <h2 id="edit-date" contenteditable="true" data="pre"></h2>
+    </div>
+    <form>
+      <button type="submit" id="clear-storage-btn" onclick="storage.clear()">
+        Clear Entries </button>
+        <button type="button" id="new-line-btn">New Entry</button>
+      <button type="button" onclick="storage.copy()">Copy</button>
+      </form>
+    </div>
+    <script>
+      const date = new Date();
+      const container = document.getElementById("journal-entry");
+
+      /* LOCAL STORAGE */
+
+      const storage = {
+        save(elm) {
+          localStorage.setItem("day", date.getDate());
+          localStorage.setItem("entries", elm.innerHTML);
+        },
+        load(elm=container) {
+          if (parseInt(localStorage.getItem("day")) === date.getDate()) {
+            elm.innerHTML = localStorage.getItem("entries");
+          } else {
+            return false;
+          }
+        },
+        clear() {
+          container.innerHTML = "";
+          localStorage.clear();
+        },
+        copy() {
+            const pres = document.querySelectorAll('[data="pre"]')
+            pres.forEach((elm) => {
+                elm.classList.add('pre')
+            })
+
+
+            const range = document.createRange();
+            range.selectNode(container);
+            window.getSelection().removeAllRanges(); // clear current selection
+            window.getSelection().addRange(range); // to select text
+            document.execCommand("copy");
+            window.getSelection().removeAllRanges();// to deselect
+
+            pres.forEach((elm) => {
+                elm.classList.remove('pre');
+            })
+        }
+        
+      };
+
+      container.addEventListener("keyup", () => {
+        storage.save(container);
+      });
+
+      /* MAIN CODE */
+      const numericDate = date.toLocaleDateString("en-us", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        hour12: false,
+      });
+
+      const dateElm = document.getElementById("edit-date");
+      const load = storage.load();
+      load === false ? (dateElm.innerHTML = numericDate + "<br>") : null;
+
+      const addBtn = document.getElementById("new-line-btn");
+      addBtn.addEventListener("click", () => {
+        const newDiv = document.createElement("div");
+        newDiv.setAttribute('data', 'pre');
+        newDiv.classList.add("entry");
+        const head = document.createElement("h4");
+        head.contentEditable = true;
+        const content = document.createElement("div");
+        content.contentEditable = true;
+        content.setAttribute('tabindex', '0')
+        content.innerHTML = "Entry...";
+        const time = new Date().toLocaleTimeString("en-us", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        head.innerHTML = `<br>` + time;
+        const append = [head, content];
+        append.forEach((elm) => {
+            elm.setAttribute('data', 'pre');
+            newDiv.appendChild(elm)
+        });
+
+        container.appendChild(newDiv);
+      });
+    </script>
+  </body>
+</html>
